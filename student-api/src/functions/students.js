@@ -10,7 +10,7 @@ const {
 
 app.http("students", {
 
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "DELETE"],
 
     authLevel: "anonymous",
 
@@ -147,6 +147,115 @@ app.http("students", {
 
 
         // =========================
+        // DELETE
+        // =========================
+
+        if (request.method === "DELETE") {
+
+            try {
+
+                const studentId =
+                    request.query.get("id");
+
+
+                if (!studentId) {
+
+                    return {
+
+                        status: 400,
+
+                        jsonBody: {
+
+                            message:
+                                "Student ID is required."
+
+                        }
+
+                    };
+
+                }
+
+
+                const pool =
+                    await getPool();
+
+
+                const result =
+                    await pool
+                        .request()
+
+                        .input(
+                            "StudentID",
+                            sql.Int,
+                            parseInt(studentId)
+                        )
+
+                        .query(`
+                            DELETE FROM Students
+                            WHERE StudentID = @StudentID
+                        `);
+
+
+                if (
+                    result.rowsAffected[0] === 0
+                ) {
+
+                    return {
+
+                        status: 404,
+
+                        jsonBody: {
+
+                            message:
+                                "Student not found."
+
+                        }
+
+                    };
+
+                }
+
+
+                return {
+
+                    status: 200,
+
+                    jsonBody: {
+
+                        message:
+                            "Student deleted successfully."
+
+                    }
+
+                };
+
+
+            } catch (error) {
+
+                context.error(error);
+
+                return {
+
+                    status: 500,
+
+                    jsonBody: {
+
+                        message:
+                            "Unable to delete student.",
+
+                        error:
+                            error.message
+
+                    }
+
+                };
+
+            }
+
+        }
+
+
+        // =========================
         // GET
         // =========================
 
@@ -224,4 +333,3 @@ app.http("students", {
     }
 
 });
-
